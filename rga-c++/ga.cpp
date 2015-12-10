@@ -279,7 +279,8 @@ void GA::tournamentSelection ()
             offspring[i].init (ell);
     }
 
-    int randArray[selectionPressure * nNextGeneration];
+    //int randArray[selectionPressure * nNextGeneration];
+    int* randArray = new int[selectionPressure * nNextGeneration];
 
     int q = (selectionPressure * nNextGeneration) / nCurrent;
     int r = (selectionPressure * nNextGeneration) % nCurrent;
@@ -306,6 +307,7 @@ void GA::tournamentSelection ()
         }
         selectionIndex[i] = winner;
     }
+    delete[] randArray;
 }
 
 
