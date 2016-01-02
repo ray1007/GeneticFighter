@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
                 buffer[i] = pStr[i].Char.AsciiChar;
 
             hFile = CreateFile(
-                       "../fitness.tmp",          // name of the write
+                       "fitness.tmp",          // name of the write
                        GENERIC_WRITE,          // open for writing
                        0,                      // do not share
                        NULL,                   // default security

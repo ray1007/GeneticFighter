@@ -1,8 +1,10 @@
 #include <windows.h>
+#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <iostream>
+#include <string>
 
 #pragma comment(lib, "user32.lib")
 
@@ -15,19 +17,21 @@ using namespace std;
 /*  global variables  */
 const char fitnessFilename[] = "fitness.tmp";
 
-
-void press_key(HWND window, byte key, int times = 1){
-    for (int i = 0; i < times; ++i){
-        SendMessage(window, WM_KEYDOWN, key, 0);
-        Sleep(33);
-        SendMessage(window, WM_KEYUP, key, 0);
-        Sleep(33);
-    }
-}
-
 /*  function prototypes */
 BOOL WINAPI ConsoleHandler(DWORD);
 double ReadFitness(void);
+
+void press_key(HWND window, byte key, int times );
+
+void vs_setup(HWND window_vs);
+
+void vs_one_run(HWND window_vs);
+
+void stage_setup(HWND window_stage);
+
+void stage_one_run(HWND window_stage);
+
+void update_as(int* currentGene, int len);
 
  
 /* main function */
@@ -65,61 +69,27 @@ int main(int argc, char *argv[])
     while (~GetKeyState(VK_RETURN) & 0x80)
     {
     }
+	int a[5] = { 1, 2, 3, 4, 5 };
     if (vs == -1){
-        press_key(window_vs, 'K');
-        Sleep(150);
-        press_key(window_vs, 'K', 3);
-        press_key(window_vs, VK_SPACE, 5);
-        press_key(window_vs, 'L');
-        press_key(window_vs, 'K', 3);
-        press_key(window_vs, 'J', 2);
-        press_key(window_vs, 'K', 2);
-        press_key(window_vs, 'I', 2);
-        press_key(window_vs, 'K');
+		vs_setup(window_vs);
 
         /*  start cmd and wait for response */
-        system("grabConsole train_vs");
-        cout<<"We've got : "<<ReadFitness()<<"\n";
 
         while (true){
-            //while (~GetKeyState('K') & 0x80){}
-            if (GetKeyState(VK_ESCAPE) & 0x80) break;
-            Sleep(5000);
-            press_key(window_vs, VK_F4);
-            Sleep(100);
-            press_key(window_vs, 188, 2);
-            press_key(window_vs, 'K');
-            press_key(window_vs, 'I', 2);
-            press_key(window_vs, 'K');
+			//GA generation
+			update_as(a, 3);
+			vs_one_run(window_vs);            
         }
     }
     else{
-        press_key(window_stage, 188);
-        press_key(window_stage, 'K');
-        Sleep(150);
-        press_key(window_stage, 'K', 2);
-        press_key(window_stage, VK_SPACE, 5);
-        press_key(window_stage, 'L');
-        press_key(window_stage, 'K');
-        press_key(window_stage, 'J', 2);
-        press_key(window_stage, 'K');
-        press_key(window_stage, 'I', 2);
-        press_key(window_stage, 'K');
-        
+		stage_setup(window_stage);
         /*  start cmd and wait for response */
-        system("grabConsole train_stage");
-        cout<<"We've got : "<<ReadFitness()<<"\n"; 
         
         while (true){
-            //while (~GetKeyState('K') & 0x80){}
-            if (GetKeyState(VK_ESCAPE) & 0x80) break;
-            Sleep(20000);
-            press_key(window_stage, VK_F4);
-            Sleep(100);
-            press_key(window_stage, 'K');
+			stage_one_run(window_stage);
         }
     }
-
+	system("pause");
     return EXIT_SUCCESS;
 }
 
@@ -160,11 +130,98 @@ double ReadFitness(void) {
 
     bSuccess = ReadFile( hFile, chBuf, BUFSIZE, &dwRead, NULL);
     //printf("hide n seek\n");
-    if( ! bSuccess || dwRead == 0 ) 
-        ExitProcess(1);
+	/*if (!bSuccess || dwRead == 0){
+		ExitProcess(1);
+	}*/
     //sscanf(chBuf, "%*s %i %*s %*i %*s",&fitness);
     
     system("del fitness.tmp");
     fitness = 0.5;
     return fitness;
 } 
+
+void press_key(HWND window, byte key, int times = 1){
+	for (int i = 0; i < times; ++i){
+		SendMessage(window, WM_KEYDOWN, key, 0);
+		Sleep(33);
+		SendMessage(window, WM_KEYUP, key, 0);
+		Sleep(33);
+	}
+}
+
+void vs_setup(HWND window_vs){
+	press_key(window_vs, 'K');
+	Sleep(150);
+	press_key(window_vs, 'K', 3);
+	press_key(window_vs, VK_SPACE, 5);
+	press_key(window_vs, 'L');
+	press_key(window_vs, 'K', 3);
+	press_key(window_vs, 'J', 2);
+	press_key(window_vs, 'K', 2);
+	press_key(window_vs, 'I', 2);
+}
+
+void vs_one_run(HWND window_vs){
+	press_key(window_vs, VK_F4);
+	Sleep(100);
+	press_key(window_vs, 188, 2);
+	press_key(window_vs, 'K');
+	press_key(window_vs, 'I', 2);
+	press_key(window_vs, 'K');
+	Sleep(3000);
+	system("grabConsole train_vs");
+	cout << "We've got : " << ReadFitness() << "\n";
+}
+
+void stage_setup(HWND window_stage){
+	press_key(window_stage, 188);
+	press_key(window_stage, 'K');
+	Sleep(150);
+	press_key(window_stage, 'K', 2);
+	press_key(window_stage, VK_SPACE, 5);
+	press_key(window_stage, 'L');
+	press_key(window_stage, 'K');
+	press_key(window_stage, 'J', 2);
+	press_key(window_stage, 'K');
+	press_key(window_stage, 'I', 2);
+}
+
+void stage_one_run(HWND window_stage){
+	press_key(window_stage, VK_F4);
+	Sleep(100);
+	press_key(window_stage, 'K');
+	Sleep(3000);
+	system("grabConsole train_stage");
+	cout << "We've got : " << ReadFitness() << "\n";
+}
+
+void update_as(int* currentGene, int len){
+	int line2write = 7;
+	int line = 1;
+	string str;
+	ofstream buff("ai/buffer.as", ios::out);
+	ifstream input("ai/10.as", ifstream::in);
+	while (getline(input, str))
+	{
+		if (line++ == line2write){
+			buff << "array<int> WholeSeq = {";
+			for (int i = 0; i < len; ++i){
+				buff << currentGene[i];
+				if (i != len - 1)
+					buff << ",";
+			}
+			buff << "};" << endl;
+		}
+		else
+			buff << str << endl;
+	}
+	buff.close();
+	ifstream buff1("ai/buffer.as", ifstream::in);
+	ofstream output("ai/10.as", ios::out);
+	while (getline(buff1, str)){
+		output << str << endl;
+	}
+	output.close();
+
+}
+
