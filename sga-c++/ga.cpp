@@ -150,18 +150,6 @@ void GA::loadfile(const char* filename)
     int i, j;
     int seqLen;
     int val;
-    for(i=0; i<nCurrent; ++i){
-        fscanf( fp, "%i", &seqLen);
-        population[i].init (seqAlph, seqLen, posLen);
-        for(j=0; j<posLen; ++j){
-            fscanf( fp, "%i", &val);
-            population[i].setPosVal(j, val);
-        }
-        for(j=0; j<seqLen; ++j){
-            fscanf( fp, "%i", &val);
-            population[i].setSeqVal(j, val);
-        }
-    }
     for(i=0; i<nElite; ++i){
         fscanf( fp, "%i", &seqLen);
         elite[i].init (seqAlph, seqLen, posLen);
@@ -174,6 +162,19 @@ void GA::loadfile(const char* filename)
             elite[i].setSeqVal(j, val);
         }
     }
+    for(i=0; i<nCurrent; ++i){
+        fscanf( fp, "%i", &seqLen);
+        population[i].init (seqAlph, seqLen, posLen);
+        for(j=0; j<posLen; ++j){
+            fscanf( fp, "%i", &val);
+            population[i].setPosVal(j, val);
+        }
+        for(j=0; j<seqLen; ++j){
+            fscanf( fp, "%i", &val);
+            population[i].setSeqVal(j, val);
+        }
+    }
+    
     
     fclose(fp);
 }
@@ -201,20 +202,20 @@ void GA::savefile(const char* filename)
     //fprintf( fp, "maxFe: %i\n", maxFe);
 
     int i, j;
-    for(i=0; i<nCurrent; ++i){
-        fprintf(fp, "%i ", population[i].getSeqLength());
-        for(j=0; j<population[i].getPosLength(); ++j)
-            fprintf( fp, "%i ", population[i].getPosVal(j));
-        for(j=0; j<population[i].getSeqLength(); ++j)
-            fprintf( fp, "%i ", population[i].getSeqVal(j));
-        fprintf(fp, "\n");
-    }
     for(i=0; i<nElite; ++i){
         fprintf(fp, "%i ", elite[i].getSeqLength());
         for(j=0; j<elite[i].getPosLength(); ++j)
             fprintf( fp, "%i ", elite[i].getPosVal(j));
         for(j=0; j<elite[i].getSeqLength(); ++j)
             fprintf( fp, "%i ", elite[i].getSeqVal(j));
+        fprintf(fp, "\n");
+    }
+    for(i=0; i<nCurrent; ++i){
+        fprintf(fp, "%i ", population[i].getSeqLength());
+        for(j=0; j<population[i].getPosLength(); ++j)
+            fprintf( fp, "%i ", population[i].getPosVal(j));
+        for(j=0; j<population[i].getSeqLength(); ++j)
+            fprintf( fp, "%i ", population[i].getSeqVal(j));
         fprintf(fp, "\n");
     }
 

@@ -122,10 +122,10 @@ int main (int argc, char *argv[])
         }
 
         fflush (NULL);
-        //ga.savefile("test2.spore");
+        //
         */
-        
     }
+    ga.savefile("test.spore");
 
 
     printf ("\nAverage Gen of Success: %f\n", stGenS.getMean());
