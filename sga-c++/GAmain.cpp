@@ -47,7 +47,7 @@ int main (int argc, char *argv[])
     int maxFe = atoi (argv[8]);  // max fe
     //int repeat = atoi (argv[9]); // how many time to repeat
     */
-    int i, j, k, len;
+    int i, j, k, seqLen;
 
 
     Statistics stGenS, stGenF;
@@ -56,9 +56,11 @@ int main (int argc, char *argv[])
     int failNum = 0;
 
     // variable length one-max problem.
+    int pos[2] = {50, 9};
     int MaxFitness = 15;
+    int posLen = 2;
 
-    GA ga (alph, nInitial, nElite, selectionPressure, 
+    GA ga (alph, posLen, nInitial, nElite, selectionPressure, 
            pc, pm, maxFe);
 
     for (i = 0; i < maxGen; i++) {
@@ -66,12 +68,16 @@ int main (int argc, char *argv[])
         double* allFitness = new double[ga.getNChromosome()];
         
         for(j = 0; j < ga.getNChromosome(); j++){
-            int* currentGene = ga.getChromosomeGene(j, len);
+            int* currentGene = ga.getChromosomeGene(j, seqLen);
             // unit test of variable length
             // with external evaluation
-            allFitness[j] = -abs(MaxFitness - len);
-            for(k = 0; k < len; k++){
-                if(k >= MaxFitness)
+            allFitness[j] = -abs(MaxFitness - seqLen);
+            for(k = 0; k < posLen; k++){
+                allFitness[j] -= (double)abs(pos[k] - currentGene[k]) / 10;
+                //printf("pos fit %f\n", abs(pos[k] - currentGene[k])/10);
+            }
+            for(k = posLen; k < posLen + seqLen; k++){
+                if(k - posLen >= MaxFitness)
                     break;
                 if(currentGene[k] == 1)
                     allFitness[j]++;

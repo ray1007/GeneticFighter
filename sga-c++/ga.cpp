@@ -22,8 +22,9 @@
 
 GA::GA () : auxComp(this)
 {
-    alph = 0;
+    seqAlph = 0;
     //ell = 0;
+    posLen = 0;
     nInitial = 0;
     nCurrent = 0;
     fe = 0;
@@ -35,21 +36,19 @@ GA::GA () : auxComp(this)
     population = NULL;
     offspring = NULL;
     selectionIndex = NULL;
-
 }
 
 
-GA::GA (int n_alph, int n_nInitial, int n_nElite, int n_selectionPressure,
-        double n_pc, double n_pm, int n_maxFe) : auxComp(this)
+GA::GA (int n_seqAlph, int n_posLen, int n_nInitial, int n_nElite, 
+    int n_selectionPressure, double n_pc, double n_pm, int n_maxFe) : auxComp(this)
 {
-    init (n_alph, n_nInitial, n_nElite, n_selectionPressure,
-          n_pc, n_pm, n_maxFe);
+    init (n_seqAlph, n_posLen, n_nInitial, n_nElite, 
+        n_selectionPressure, n_pc, n_pm, n_maxFe);
 }
 
 
 GA::~GA ()
 {
-
     delete[]population;
     delete[]offspring;
     delete[]selectionIndex;
@@ -57,13 +56,13 @@ GA::~GA ()
 
 
 void
-GA::init (int n_alph, int n_nInitial, int n_nElite, int n_selectionPressure,
-          double n_pc, double n_pm, int n_maxFe)
+GA::init (int n_seqAlph, int n_posLen, int n_nInitial, int n_nElite, 
+    int n_selectionPressure, double n_pc, double n_pm, int n_maxFe)
 {
     int i;
 
-    alph = n_alph;
-    //ell = n_ell;
+    seqAlph = n_seqAlph;
+    posLen = n_posLen;
     nInitial = n_nInitial;
     nElite = n_nElite;
     nCurrent = nInitial;
@@ -81,13 +80,13 @@ GA::init (int n_alph, int n_nInitial, int n_nElite, int n_selectionPressure,
     selectionIndex = new int[nInitial];
 
     for (i = 0; i < nInitial; i++) {
-        int ell = myRand.uniformInt(3,7);
-        population[i].init (alph, ell);
+        int seqLen = myRand.uniformInt(3,7);
+        population[i].init (seqAlph, seqLen, posLen);
         //offspring[i].init (alph, ell);
     }
     for (i = 0; i < nElite; i++) {
-        int ell = myRand.uniformInt(3,7);
-        elite[i].init(alph, ell);
+        int seqLen = myRand.uniformInt(3,7);
+        elite[i].init (seqAlph, seqLen, posLen);
     }
 
     initializePopulation ();
@@ -98,12 +97,18 @@ void GA::initializePopulation ()
 {
     int i, j;
 
-    for (i = 0; i < nInitial; i++)
-        for (j = 0; j < population[i].getLength(); j++)
-            population[i].setVal (j, myRand.uniformInt(0,alph) );
-    for (i = 0; i < nElite; i++)
-        for (j = 0; j < elite[i].getLength(); j++)
-            elite[i].setVal (j, myRand.uniformInt(0,alph) );
+    for (i = 0; i < nInitial; i++){
+        for (j = 0; j < population[i].getSeqLength(); j++)
+            population[i].setSeqVal (j, myRand.uniformInt(0, seqAlph) );
+        for (j = 0; j < population[i].getPosLength(); j++)
+            population[i].setPosVal (j, myRand.uniformInt(0,150) );
+    }
+    for (i = 0; i < nElite; i++){
+        for (j = 0; j < elite[i].getSeqLength(); j++)
+            elite[i].setSeqVal (j, myRand.uniformInt(0, seqAlph) );
+        for (j = 0; j < elite[i].getPosLength(); j++)
+            elite[i].setPosVal (j, myRand.uniformInt(0,150) );
+    }
 }
 
 void GA::loadfile(const char* filename)
@@ -125,7 +130,8 @@ void GA::loadfile(const char* filename)
     
     fscanf( fp, "%s %i", token, &generation); 
     //fscanf( fp, "%s %i", token, &repeat);
-    fscanf( fp, "%s %i", token, &alph);
+    fscanf( fp, "%s %i", token, &seqAlph);
+    fscanf( fp, "%s %i", token, &posLen);
     fscanf( fp, "%s %i", token, &nInitial);
     fscanf( fp, "%s %i", token, &nCurrent); 
     fscanf( fp, "%s %i", token, &nElite); 
@@ -137,19 +143,35 @@ void GA::loadfile(const char* filename)
     //fscanf( fp, "%s %i", token, &maxFe);
 
     population = new Chromosome[nCurrent];
-    offspring = new Chromosome[nCurrent];
+    offspring  = new Chromosome[nCurrent];
+    elite      = new Chromosome[nElite];
     selectionIndex = new int[nCurrent];
 
     int i, j;
-    int ell;
+    int seqLen;
     int val;
     for(i=0; i<nCurrent; ++i){
-        fscanf( fp, "%i", &ell);
-        population[i].init (alph, ell);
-        offspring[i].init (alph, ell);
-        for(j=0; j<ell; ++j){
+        fscanf( fp, "%i", &seqLen);
+        population[i].init (seqAlph, seqLen, posLen);
+        for(j=0; j<posLen; ++j){
             fscanf( fp, "%i", &val);
-            population[i].setVal(j, val);
+            population[i].setPosVal(j, val);
+        }
+        for(j=0; j<seqLen; ++j){
+            fscanf( fp, "%i", &val);
+            population[i].setSeqVal(j, val);
+        }
+    }
+    for(i=0; i<nElite; ++i){
+        fscanf( fp, "%i", &seqLen);
+        elite[i].init (seqAlph, seqLen, posLen);
+        for(j=0; j<posLen; ++j){
+            fscanf( fp, "%i", &val);
+            elite[i].setPosVal(j, val);
+        }
+        for(j=0; j<seqLen; ++j){
+            fscanf( fp, "%i", &val);
+            elite[i].setSeqVal(j, val);
         }
     }
     
@@ -166,7 +188,8 @@ void GA::savefile(const char* filename)
 
     fprintf( fp, "generation: %i\n", generation);
     //fprintf( fp, "repeat: %i\n", repeat);
-    fprintf( fp, "alph: %i\n", alph);
+    fprintf( fp, "seqAlph: %i\n", seqAlph);
+    fprintf( fp, "posLen: %i\n", posLen);
     fprintf( fp, "nInitial: %i\n", nInitial);
     fprintf( fp, "nCurrent: %i\n", nCurrent);
     fprintf( fp, "nElite: %i\n", nElite);
@@ -179,9 +202,19 @@ void GA::savefile(const char* filename)
 
     int i, j;
     for(i=0; i<nCurrent; ++i){
-        fprintf(fp, "%i ", population[i].getLength());
-        for(j=0; j<population[i].getLength(); ++j)
-            fprintf( fp, "%i ", population[i].getVal(j));
+        fprintf(fp, "%i ", population[i].getSeqLength());
+        for(j=0; j<population[i].getPosLength(); ++j)
+            fprintf( fp, "%i ", population[i].getPosVal(j));
+        for(j=0; j<population[i].getSeqLength(); ++j)
+            fprintf( fp, "%i ", population[i].getSeqVal(j));
+        fprintf(fp, "\n");
+    }
+    for(i=0; i<nElite; ++i){
+        fprintf(fp, "%i ", elite[i].getSeqLength());
+        for(j=0; j<elite[i].getPosLength(); ++j)
+            fprintf( fp, "%i ", elite[i].getPosVal(j));
+        for(j=0; j<elite[i].getSeqLength(); ++j)
+            fprintf( fp, "%i ", elite[i].getSeqVal(j));
         fprintf(fp, "\n");
     }
 
@@ -189,22 +222,26 @@ void GA::savefile(const char* filename)
 }
 
 //std::vector<double> GA::getPopulationGene(int idx)
-int* GA::getChromosomeGene(int idx, int& length)
+int* GA::getChromosomeGene(int idx, int& seqLength)
 {
     int i;
     if(idx < nInitial){ // population
-        int ell = population[idx].getLength();
-        int* output = new int[ell];
-        for(i=0; i<ell; ++i)
-            output[i] = population[idx].getVal(i);
-        length = ell;
+        int seqLen = population[idx].getSeqLength();
+        int* output = new int[posLen + seqLen];
+        for(i=0; i<posLen; ++i)
+            output[i] = population[idx].getPosVal(i);
+        for(i=posLen; i<posLen + seqLen; ++i)
+            output[i] = population[idx].getSeqVal(i - posLen);
+        seqLength = seqLen;
         return output;
     } else { // elites
-        int ell = elite[idx - nInitial].getLength();
-        int* output = new int[ell];
-        for(i=0; i<ell; ++i)
-            output[i] = elite[idx - nInitial].getVal(i);
-        length = ell;
+        int seqLen = elite[idx - nInitial].getSeqLength();
+        int* output = new int[posLen + seqLen];
+        for(i=0; i<posLen; ++i)
+            output[i] = elite[idx - nInitial].getPosVal(i);
+        for(i=posLen; i<posLen+seqLen; ++i)
+            output[i] = elite[idx - nInitial].getSeqVal(i - posLen);
+        seqLength = seqLen;
         return output;
     }
 }
@@ -290,48 +327,6 @@ void GA::selection ()
     tournamentSelection ();
 }
 
-// Roulette wheel selection
-// This is a O(n^2) implementation
-// You can achieve O(nlogn) by using binary search
-/*void GA::rwSelection ()
-{
-    int i, j;
-
-    // Adjusting population size 
-    nNextGeneration = getNextPopulation ();
-
-    if (nNextGeneration != nCurrent) {
-        delete[]selectionIndex;
-        delete[]offspring;
-        selectionIndex = new int[nNextGeneration];
-        offspring = new Chromosome[nNextGeneration];
-
-        for (i = 0; i < nNextGeneration; i++)
-            offspring[i].init (ell);
-    }
-
-    double totalFitness = 0.0;
-    for (i = 0; i < nCurrent; i++) 
-	    totalFitness += population[i].getFitness();
-
-    for (i = 0; i < nNextGeneration; i++) {
-    	double pointer = totalFitness * myRand.uniform();
-    	int index = -1;
-    	double partialSum = 0.0;
-	    for (j = 0; j < nCurrent; j++) {
-	        partialSum += population[j].getFitness();
-            if (partialSum >= pointer) {
-                index = j;
-                break;
-            }
-	    }
-	    if (index == -1) index = nCurrent - 1;
-
-	    selectionIndex[i] = index;
-    }
-
-}
-*/
 // tournamentSelection without replacement
 void GA::tournamentSelection ()
 {
@@ -385,22 +380,37 @@ void GA::tournamentSelection ()
 void GA::crossover ()
 {
     int i;
+    int randIdx;
 
     if ((nNextGeneration & 0x1) == 0) { 
     	// nNextGeneration is even
         for (i = 0; i < nNextGeneration; i += 2){
-            pairwiseXO (population[selectionIndex[i]], 
+            /*randIdx = myRand.uniformInt(0, nNextGeneration-1);
+            SPX_onePointXO( population[selectionIndex[i]],
+                            population[selectionIndex[i+1]], 
+                            population[selectionIndex[randIdx]],
+                            offspring[i], 
+                            offspring[i+1]);*/
+            pairwiseXO (population[selectionIndex[i]],
                         population[selectionIndex[i + 1]],
-                        offspring[i], 
+                        offspring[i],
                         offspring[i + 1]);
         }
     }
     else {
         for (i = 0; i < nNextGeneration - 1; i += 2) {
+            /*randIdx = myRand.uniformInt(0, nNextGeneration-1);
+            SPX_onePointXO( population[selectionIndex[i]],
+                            population[selectionIndex[i+1]], 
+                            population[selectionIndex[randIdx]],
+                            offspring[i], 
+                            offspring[i+1]);*/
+            
             pairwiseXO (population[selectionIndex[i]],
                         population[selectionIndex[i + 1]],
                         offspring[i],
                         offspring[i + 1]);
+            
         }
         offspring[nNextGeneration - 1] =
             population[selectionIndex[nNextGeneration - 1]];
@@ -412,7 +422,7 @@ void GA::crossover ()
 void GA::pairwiseXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
 {
     if (myRand.uniform () < pc) {
-	    onePointXO (p1, p2, c1, c2);
+	    BLX_onePointXO (p1, p2, c1, c2);
 //      uniformXO (p1, p2, c1, c2, 0.5);
     }
     else {
@@ -421,19 +431,20 @@ void GA::pairwiseXO (const Chromosome & p1, const Chromosome & p2, Chromosome & 
     }
 }
 
+/*
 void GA::onePointXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
 {
     int i;
-    int crossSite1 = myRand.uniformInt(1, p1.getLength()-1);
-    int crossSite2 = myRand.uniformInt(1, p2.getLength()-1);
-    int newLen1 = crossSite1 + p2.getLength()-crossSite2;
+    int crossSite1 = myRand.uniformInt(1, p1.getSeqLength()-1);
+    int crossSite2 = myRand.uniformInt(1, p2.getSeqLength()-1);
+    int newLen1 = crossSite1 + p2.getSeqLength()-crossSite2;
     int newLen2 = crossSite2 + p1.getLength()-crossSite1;
     c1.init(alph, newLen1);
     c2.init(alph, newLen2);
  
     for (i = 0; i < p1.getLength(); i++) {
         if(i < crossSite1)
-            c1.setVal (i, p1.getVal(i));
+            c1.setSeqVal (i, p1.getSeqVal(i));
         else
             c2.setVal (crossSite2-crossSite1+i, p1.getVal(i));
     }
@@ -442,6 +453,108 @@ void GA::onePointXO (const Chromosome & p1, const Chromosome & p2, Chromosome & 
             c2.setVal (i, p2.getVal(i));
         else
             c1.setVal (crossSite1-crossSite2+i, p2.getVal(i));
+    }
+}
+*/
+/*
+void GA::SPX_onePointXO (const Chromosome & p1, const Chromosome & p2, 
+    const Chromosome& p3, Chromosome & c1, Chromosome & c2)
+{
+    int i;
+    
+    // seqence part : one point XO
+    int crossSite1 = myRand.uniformInt(1, p1.getSeqLength()-1);
+    int crossSite2 = myRand.uniformInt(1, p2.getSeqLength()-1);
+    int newSeqLen1 = crossSite1 + p2.getSeqLength()-crossSite2;
+    int newSeqLen2 = crossSite2 + p1.getSeqLength()-crossSite1;
+    c1.init(seqAlph, newSeqLen1, posLen);
+    c2.init(seqAlph, newSeqLen2, posLen);
+ 
+    for (i = 0; i < p1.getSeqLength(); i++) {
+        if(i < crossSite1)
+            c1.setSeqVal (i, p1.getSeqVal(i));
+        else
+            c2.setSeqVal (crossSite2-crossSite1+i, p1.getSeqVal(i));
+    }
+    for (i = 0; i < p2.getSeqLength(); i++) {
+        if(i < crossSite2)
+            c2.setSeqVal (i, p2.getSeqVal(i));
+        else
+            c1.setSeqVal (crossSite1-crossSite2+i, p2.getSeqVal(i));
+    }
+
+    // position part : SPX 
+    double a, b, c;
+    a = myRand.uniform(0, 1);
+    b = myRand.uniform(0, 1);
+    if( a+b > 1)
+        b = 1-a;
+    c = myRand.uniform(0, 1);
+    if (a+b+c > 1)
+        c = 1-a-b;
+    for(i = 0; i < posLen; i++){
+        double val = 0;
+        val += a * p1.getPosVal(i);
+        val += b * p2.getPosVal(i);
+        val += c * p3.getPosVal(i);
+        c1.setPosVal(i, (int)val * pow(posLen+2, 0) );
+    }
+
+    a = myRand.uniform(0, 1);
+    b = myRand.uniform(0, 1);
+    if( a+b > 1)
+        b = 1-a;
+    c = myRand.uniform(0, 1);
+    if (a+b+c > 1)
+        c = 1-a-b;
+    for(i = 0; i < posLen; i++){
+        double val = 0;
+        val += a * p1.getPosVal(i);
+        val += b * p2.getPosVal(i);
+        val += c * p3.getPosVal(i);
+        c2.setPosVal(i, (int)val * pow(posLen+2, 0) );
+    }
+}*/
+
+void GA::BLX_onePointXO (const Chromosome & p1, const Chromosome & p2, 
+    Chromosome & c1, Chromosome & c2)
+{
+    int i;
+    
+    // seqence part : one point XO
+    int crossSite1 = myRand.uniformInt(1, p1.getSeqLength()-1);
+    int crossSite2 = myRand.uniformInt(1, p2.getSeqLength()-1);
+    int newSeqLen1 = crossSite1 + p2.getSeqLength()-crossSite2;
+    int newSeqLen2 = crossSite2 + p1.getSeqLength()-crossSite1;
+    c1.init(seqAlph, newSeqLen1, posLen);
+    c2.init(seqAlph, newSeqLen2, posLen);
+ 
+    for (i = 0; i < p1.getSeqLength(); i++) {
+        if(i < crossSite1)
+            c1.setSeqVal (i, p1.getSeqVal(i));
+        else
+            c2.setSeqVal (crossSite2-crossSite1+i, p1.getSeqVal(i));
+    }
+    for (i = 0; i < p2.getSeqLength(); i++) {
+        if(i < crossSite2)
+            c2.setSeqVal (i, p2.getSeqVal(i));
+        else
+            c1.setSeqVal (crossSite1-crossSite2+i, p2.getSeqVal(i));
+    }
+
+    // position part : SPX 
+    double alpha = 0.5;
+    for (i = 0; i < posLen; i++){
+        int x = p1.getPosVal(i);
+        int y = p2.getPosVal(i);
+        if( x > y ){
+            int temp = x;
+            x = y;
+            y = temp;
+        }
+        double I = y - x;
+        c1.setPosVal(i, (int)myRand.uniform(x - alpha*I, y + alpha*I));
+        c2.setPosVal(i, (int)myRand.uniform(x - alpha*I, y + alpha*I));
     }
 }
 
@@ -469,21 +582,22 @@ void GA::mutation ()
     mutationClock ();
 }
 
-
+/*
 void GA::simpleMutation ()
 {
     int i, j;
 
     for (i = 0; i < nNextGeneration; i++){
-        int ell = offspring[i].getLength();
+        int ell = offspring[i].getSeqLength();
         for (j = 0; j< ell; j++){
             if (myRand.flip(pm)) {
-                int val = offspring[i].getVal(j);
+                int val = offspring[i].getSeqVal(j);
                 offspring[i].setVal(j, 1-val);
             }
         }
     }
 }
+*/
 
 void GA::mutationClock ()
 {
@@ -511,10 +625,10 @@ void GA::showStatistics ()
         stFitness.getMax (), stFitness.getMean (), stFitness.getMin ());
     int len;
     if(bestIndex < nInitial)
-        len = population[bestIndex].getLength() ;
+        len = population[bestIndex].getSeqLength() ;
     else
-        len = elite[bestIndex - nInitial].getLength();
-    printf("Chromsome Length:%d\n", len);
+        len = elite[bestIndex - nInitial].getSeqLength();
+    printf("Chromsome Seq Length:%d\n", len);
     printf ("best chromosome:");
     if(bestIndex < nInitial)
         population[bestIndex].printf ();

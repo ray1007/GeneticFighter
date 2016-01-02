@@ -15,40 +15,38 @@ class GA
 {
     public:
         GA ();
-        GA (int n_alph, int n_nInitial, int n_nelite, int n_selectionPressure,
-            double n_pc, double n_pm, int n_maxFe);
+        GA (int n_seqAlph, int n_posLen, int n_nInitial, int n_nelite, 
+            int n_selectionPressure, double n_pc, double n_pm, int n_maxFe);
 
         ~GA ();
 
-        void init (int n_alph, int n_nInitial, int n_nelite, int n_selectionPressure,
-                   double n_pc, double n_pm, int n_maxFe);
+        void init (int n_seqAlph, int n_posLen, int n_nInitial, int n_nelite, 
+                int n_selectionPressure, double n_pc, double n_pm, int n_maxFe);
 
         void initializePopulation ();
         void loadfile(const char* filename);
         void savefile(const char* filename);
         //void evaluateAll();
         //std::vector<double> getPopulationGene(int idx);
-        int* getChromosomeGene(int idx, int& length);
+        int* getChromosomeGene(int idx, int& seqLength);
         void setPopulationFitness(double* values);
 
         // elitism
         void pickElite();
-
+        
         void selection ();
-
         /** tournament selection without replacement */
         void tournamentSelection ();
 
-	    /** Roulette wheel selection */
-	    //void rwSelection ();
-
         void crossover ();
         void pairwiseXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
-	    void onePointXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
+        //void onePointXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
+        //void SPX_onePointXO (const Chromosome &, const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
+	    void BLX_onePointXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
         //void uniformXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &, double);
 
         void mutation ();
-        void simpleMutation ();
+        //void simpleMutation ();
 	    void mutationClock ();
 
         void replacePopulation ();
@@ -85,8 +83,8 @@ class GA
             const GA* myga;
         } auxComp;
 
-        int alph;                // alphabet size
-        //int ell;                 // chromosome length
+        int seqAlph;                // alphabet size
+        int posLen;                 // chromosome length
         int nInitial;            // initial population size
         int nCurrent;            // current population size
         int nNextGeneration;     // population size for the next generation
