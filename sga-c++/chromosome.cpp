@@ -178,7 +178,7 @@ void Chromosome::printf () const
     for (i = 0; i < posLength; i++)
         ::printf ("%i ", posGene[i]);
     for (i = 0; i < seqLength; i++)
-        ::printf ("%i", seqGene[i]);
+        ::printf ("%i ", seqGene[i]);
 }
 
 

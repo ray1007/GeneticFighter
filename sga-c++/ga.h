@@ -59,6 +59,7 @@ class GA
         int  getNChromosome();
         int  getNextPopulation ();
 
+        int getGeneration() { return generation; }
         Statistics stFitness;
 
     protected:

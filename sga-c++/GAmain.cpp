@@ -6,9 +6,11 @@
  ***************************************************************************/
 
 #include <cmath>
+#include <ctime>
 #include <cstdio>
 #include <iostream>
 #include <cstdlib>
+#include <string>
 
 #include "statistics.h"
 #include "ga.h"
@@ -20,7 +22,7 @@ using namespace std;
 int main (int argc, char *argv[])
 {
     // command line arguments
-    if (argc != 9) {
+    if (argc != 9 && argc != 10) {
         printf ("GA n_alph nInitial nElite selectionPressure pc pm maxGen maxFe\n");
         return -1;
     }
@@ -33,6 +35,7 @@ int main (int argc, char *argv[])
     double pm = atof (argv[6]);  // pm
     int maxGen = atoi (argv[7]); // max generation
     int maxFe = atoi (argv[8]);  // max fe
+
     //
     //int repeat = atoi (argv[9]); // how many time to repeat
     
@@ -62,7 +65,9 @@ int main (int argc, char *argv[])
 
     GA ga (alph, posLen, nInitial, nElite, selectionPressure, 
            pc, pm, maxFe);
-
+    if(argc == 10)
+        ga.loadfile(argv[9]);
+    clock_t begin = clock();
     for (i = 0; i < maxGen; i++) {
         //ga.loadfile("test.spore");
         double* allFitness = new double[ga.getNChromosome()];
@@ -125,7 +130,11 @@ int main (int argc, char *argv[])
         //
         */
     }
-    ga.savefile("test.spore");
+    clock_t end = clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    printf("time elapsed:%f\n", elapsed_secs);
+    string fname = "test"+to_string(ga.getGeneration())+".spore";
+    ga.savefile(fname.c_str());
 
 
     printf ("\nAverage Gen of Success: %f\n", stGenS.getMean());

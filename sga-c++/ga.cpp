@@ -80,12 +80,12 @@ GA::init (int n_seqAlph, int n_posLen, int n_nInitial, int n_nElite,
     selectionIndex = new int[nInitial];
 
     for (i = 0; i < nInitial; i++) {
-        int seqLen = myRand.uniformInt(3,7);
+        int seqLen = myRand.uniformInt(5,20);
         population[i].init (seqAlph, seqLen, posLen);
         //offspring[i].init (alph, ell);
     }
     for (i = 0; i < nElite; i++) {
-        int seqLen = myRand.uniformInt(3,7);
+        int seqLen = myRand.uniformInt(5,20);
         elite[i].init (seqAlph, seqLen, posLen);
     }
 
@@ -99,15 +99,15 @@ void GA::initializePopulation ()
 
     for (i = 0; i < nInitial; i++){
         for (j = 0; j < population[i].getSeqLength(); j++)
-            population[i].setSeqVal (j, myRand.uniformInt(0, seqAlph) );
+            population[i].setSeqVal (j, myRand.uniformInt(1, seqAlph) );
         for (j = 0; j < population[i].getPosLength(); j++)
-            population[i].setPosVal (j, myRand.uniformInt(0,150) );
+            population[i].setPosVal (j, myRand.uniformInt(15,200) );
     }
     for (i = 0; i < nElite; i++){
         for (j = 0; j < elite[i].getSeqLength(); j++)
-            elite[i].setSeqVal (j, myRand.uniformInt(0, seqAlph) );
+            elite[i].setSeqVal (j, myRand.uniformInt(1, seqAlph) );
         for (j = 0; j < elite[i].getPosLength(); j++)
-            elite[i].setPosVal (j, myRand.uniformInt(0,150) );
+            elite[i].setPosVal (j, myRand.uniformInt(15,200) );
     }
 }
 
@@ -149,6 +149,7 @@ void GA::loadfile(const char* filename)
 
     int i, j;
     int seqLen;
+    double fitness;
     int val;
     for(i=0; i<nElite; ++i){
         fscanf( fp, "%i", &seqLen);
@@ -161,6 +162,8 @@ void GA::loadfile(const char* filename)
             fscanf( fp, "%i", &val);
             elite[i].setSeqVal(j, val);
         }
+        fscanf( fp, "%f", &fitness);
+        elite[i].setFitness(fitness);
     }
     for(i=0; i<nCurrent; ++i){
         fscanf( fp, "%i", &seqLen);
@@ -173,8 +176,9 @@ void GA::loadfile(const char* filename)
             fscanf( fp, "%i", &val);
             population[i].setSeqVal(j, val);
         }
+        fscanf( fp, "%f", &fitness);
+        population[i].setFitness(fitness);
     }
-    
     
     fclose(fp);
 }
@@ -208,6 +212,7 @@ void GA::savefile(const char* filename)
             fprintf( fp, "%i ", elite[i].getPosVal(j));
         for(j=0; j<elite[i].getSeqLength(); ++j)
             fprintf( fp, "%i ", elite[i].getSeqVal(j));
+        fprintf(fp, "%f ", elite[i].getFitness());
         fprintf(fp, "\n");
     }
     for(i=0; i<nCurrent; ++i){
@@ -216,6 +221,7 @@ void GA::savefile(const char* filename)
             fprintf( fp, "%i ", population[i].getPosVal(j));
         for(j=0; j<population[i].getSeqLength(); ++j)
             fprintf( fp, "%i ", population[i].getSeqVal(j));
+        fprintf(fp, "%f ", population[i].getFitness());
         fprintf(fp, "\n");
     }
 
@@ -554,8 +560,10 @@ void GA::BLX_onePointXO (const Chromosome & p1, const Chromosome & p2,
             y = temp;
         }
         double I = y - x;
-        c1.setPosVal(i, (int)myRand.uniform(x - alpha*I, y + alpha*I));
-        c2.setPosVal(i, (int)myRand.uniform(x - alpha*I, y + alpha*I));
+        int v1 = (int)myRand.uniform(x - alpha*I, y + alpha*I);
+        int v2 = (int)myRand.uniform(x - alpha*I, y + alpha*I);
+        c1.setPosVal(i, (v1 >=0 )?v1 :0);
+        c2.setPosVal(i, (v2 >= 0)?v2 :0);
     }
 }
 
