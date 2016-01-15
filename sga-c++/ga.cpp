@@ -457,8 +457,9 @@ void GA::crossover ()
 void GA::pairwiseXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
 {
     if (myRand.uniform () < pc) {
-	    //BLX_onePointXO (p1, p2, c1, c2);
-        onePointXO (p1, p2, c1, c2);
+	    modBLX_onePointXO (p1, p2, c1, c2);
+        //BLX_onePointXO (p1, p2, c1, c2);
+        //onePointXO (p1, p2, c1, c2);
 //      uniformXO (p1, p2, c1, c2, 0.5);
     }
     else {
@@ -499,9 +500,8 @@ void GA::onePointXO (const Chromosome & p1, const Chromosome & p2, Chromosome & 
     }
 }
 
-/*
-void GA::SPX_onePointXO (const Chromosome & p1, const Chromosome & p2, 
-    const Chromosome& p3, Chromosome & c1, Chromosome & c2)
+void GA::BLX_onePointXO (const Chromosome & p1, const Chromosome & p2, 
+    Chromosome & c1, Chromosome & c2)
 {
     int i;
     
@@ -526,40 +526,29 @@ void GA::SPX_onePointXO (const Chromosome & p1, const Chromosome & p2,
             c1.setSeqVal (crossSite1-crossSite2+i, p2.getSeqVal(i));
     }
 
-    // position part : SPX 
-    double a, b, c;
-    a = myRand.uniform(0, 1);
-    b = myRand.uniform(0, 1);
-    if( a+b > 1)
-        b = 1-a;
-    c = myRand.uniform(0, 1);
-    if (a+b+c > 1)
-        c = 1-a-b;
-    for(i = 0; i < posLen; i++){
-        double val = 0;
-        val += a * p1.getPosVal(i);
-        val += b * p2.getPosVal(i);
-        val += c * p3.getPosVal(i);
-        c1.setPosVal(i, (int)val * pow(posLen+2, 0) );
-    }
+    // position part : BLX mod 
+    double alpha = 0.2;
+    for (i = 0; i < posLen; i++){
+        int x = p1.getPosVal(i);
+        int y = p2.getPosVal(i);
+        if( x > y ){
+            int temp = x;
+            x = y;
+            y = temp;
+        }
 
-    a = myRand.uniform(0, 1);
-    b = myRand.uniform(0, 1);
-    if( a+b > 1)
-        b = 1-a;
-    c = myRand.uniform(0, 1);
-    if (a+b+c > 1)
-        c = 1-a-b;
-    for(i = 0; i < posLen; i++){
-        double val = 0;
-        val += a * p1.getPosVal(i);
-        val += b * p2.getPosVal(i);
-        val += c * p3.getPosVal(i);
-        c2.setPosVal(i, (int)val * pow(posLen+2, 0) );
+        // BLX
+        double I = y - x;
+        int v1 = (int)myRand.uniform(x - alpha*I, y + alpha*I);
+        int v2 = (int)myRand.uniform(x - alpha*I, y + alpha*I);
+        //c1.setPosVal(i, (v1 >=0 )?v1 :0);
+        //c2.setPosVal(i, (v2 >= 0)?v2 :0);
+        c1.setPosVal(i, v1);
+        c2.setPosVal(i, v2);
     }
-}*/
+}
 
-void GA::BLX_onePointXO (const Chromosome & p1, const Chromosome & p2, 
+void GA::modBLX_onePointXO (const Chromosome & p1, const Chromosome & p2, 
     Chromosome & c1, Chromosome & c2)
 {
     int i;
@@ -609,14 +598,6 @@ void GA::BLX_onePointXO (const Chromosome & p1, const Chromosome & p2,
             c1.setPosVal(i, v1);
             c2.setPosVal(i, v2);
         }
-
-        // BLX
-        /*int v1 = (int)myRand.uniform(x - alpha*I, y + alpha*I);
-        int v2 = (int)myRand.uniform(x - alpha*I, y + alpha*I);
-        //c1.setPosVal(i, (v1 >=0 )?v1 :0);
-        //c2.setPosVal(i, (v2 >= 0)?v2 :0);
-        c1.setPosVal(i, v1);
-        c2.setPosVal(i, v2);*/
     }
 }
 
@@ -640,7 +621,9 @@ void GA::uniformXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c
 
 void GA::mutation ()
 {
-    simpleMutation ();
+    //simpleMutation ();
+    //posMutation();
+    seqMutation();
     //mutationClock ();
 }
 
@@ -660,6 +643,34 @@ void GA::simpleMutation ()
     }
 }
 
+void GA::posMutation ()
+{
+    int i, j;
+   
+    for (i = 0; i < nNextGeneration; i++){
+        if(myRand.flip(pm)){
+            for(j = 0; j < offspring[i].getPosLength(); j++){
+                int val = offspring[i].getPosVal(j);
+                val = myRand.uniformInt(val-10, val+10);
+                offspring[i].setPosVal(j, val);
+            }
+        }    
+    }
+}
+
+void GA::seqMutation ()
+{
+    int i, j;
+   
+    for (i = 0; i < nNextGeneration; i++){
+        if(myRand.flip(pm)){
+            for(j = 0; j < offspring[i].getSeqLength(); j++){
+                int val = myRand.uniformInt(1, seqAlph);
+                offspring[i].setSeqVal(j, val);
+            }
+        }    
+    }
+}
 
 /*
 void GA::mutationClock ()
@@ -714,7 +725,7 @@ void GA::replacePopulation ()
     for (i = 0; i < nNextGeneration; i++){
         population[i] = offspring[i];
     */
-    int RTRwindowSize = 50;
+    int RTRwindowSize = 300;
     int* randArray = new int[nNextGeneration];
     myRand.uniformArray (randArray, nNextGeneration, 0, nNextGeneration - 1);
 
