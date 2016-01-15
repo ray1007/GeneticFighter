@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     int seqAlph = 9;    // alphabet size                           
     int selectionPressure = 2; // selection pressure
     double pc = 1;  // pc
-    double pm = 0;  // pm
+    double pm = 0.5;  // pm
     int maxFe = -1;
     int posLen = 1;
 
@@ -107,8 +107,8 @@ int main(int argc, char *argv[])
 		vs_setup(window_vs);
 
         /*  if first generation, do initial evaluation */
-        //if(argc != 5){
-        if(true){
+        if(argc != 5){
+        //if(true){
             double* allFitness = new double[ga.getNChromosome()];
             
             for(j = 0; j < ga.getNChromosome(); j++){
@@ -120,6 +120,8 @@ int main(int argc, char *argv[])
                 printf("\n");
                 update_as(currentGene, posLen+seqLen);
                 allFitness[j] = vs_one_run(window_vs);
+                //allFitness[j] += vs_one_run(window_vs);
+                //allFitness[j] /= 2;
 
                 clock_t end = clock();
                 double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
@@ -145,6 +147,8 @@ int main(int argc, char *argv[])
                 printf("\n");
                 update_as(currentGene, posLen+seqLen);
                 allFitness[j] = vs_one_run(window_vs);
+                //allFitness[j] += vs_one_run(window_vs);
+                //allFitness[j] /= 2;
 
                 clock_t end = clock();
                 double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;

@@ -40,14 +40,14 @@ class GA
 
         void crossover ();
         void pairwiseXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
-        //void onePointXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
+        void onePointXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
         //void SPX_onePointXO (const Chromosome &, const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
 	    void BLX_onePointXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
         //void uniformXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &, double);
 
         void mutation ();
-        //void simpleMutation ();
-	    void mutationClock ();
+        void simpleMutation ();
+	    //void mutationClock ();
 
         void replacePopulation ();
 
