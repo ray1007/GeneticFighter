@@ -1,24 +1,47 @@
+//woody
 int pre_hp=500;
 int elosshp=0;
 int recover = 0;
-
 int victory=0;
 int start =0;
 
 int input_x = 0;
 int input_z = 0;
 
+int prepos = 0;
+int stay =1;
+array<int> AttSeq = {51,5,5,7,5,5,4,2,1,9,3,6,2,6,8,3,2,1,7,4,3};
+//48,2,7,7,6,1,8,5,5,8,7,4
+int finish = 0;
+int recordHP;
+int run =0;
+
 //int enid = -1;
 
-array<int> AttSeq = {30,10,6,2,8,1,4,6,5,8};
+              
 int SeqLen = AttSeq.length();
-int countAtt = 2;
+int countAtt = 1;
 int clrVal = 0;
 int lasthurt =0;
 
+int obsx = 0;
+int obsz = 0;
 
-int pre_mp = 300;
+int eneID = 0;
+int countloop = 0;
+
+int pre_mp = 350;
 int lossmp = 0;
+
+int doozitone = 0;
+int enflying = 0;
+int sucatt = 0;
+int behurt = 0;
+
+int test_doo = 0;
+int test_fly= 0;
+int test_cat = 0;
+int fly_attack = 0;
 
 void cleanButton(){
 	right(0,0);
@@ -30,9 +53,20 @@ void cleanButton(){
 	D(0,0);
 }
 
-int getfitness(int lossmp, int enhurt){
+int getfitness(int enhurt,int smp,int sp,int tp,int count){
 	int fit = 0;
-	fit = enhurt - lossmp;
+	int puni = 0;
+	if(enhurt > 480)
+		puni = abs(input_x);
+	fit = (500 - enhurt) -puni + (sucatt*150/SeqLen) + test_doo*3 + fly_attack*25 + test_cat;
+	/*print("hp = "+enhurt+"\n");
+	print("doo = "+test_doo+"\n");
+	print("puni = "+puni+"\n");
+	print("success att = "+sucatt+"\n");
+	print("SeqLen = "+SeqLen+"\n");
+	//print("fly = "+test_fly+"\n");
+	print("cat = "+test_cat+"\n");
+	print("fly_attack = "+fly_attack+"\n");*/
 	return fit;
 }
 
@@ -60,56 +94,77 @@ void JUM(){
 }
 
 void id(){
-	input_x = AttSeq[0];
-	input_z = AttSeq[1];
-	cleanButton();
-	if(clrVal == 1) {
-		start = 0;
-		countAtt = -1;
-		pre_hp=500;
-		elosshp=0;
-		recover = 0;
-		pre_mp = 300;
-		lossmp = 0;
+	//clr();
+	//print(fly_attack+"\n");
+	//print(start);
+	//print("frame:"+self.frame+", state:"+self.state+", idx:"+countAtt+", alph:"+AttSeq[countAtt]+"\n");
+	if(finish == 21) {
+		elosshp = 0;
+		pre_hp = 500;
+		return;
 	}
+	countloop++;
+	if(SeqLen <=4) {
+		for(int i =0;AttSeq.length()<5;i++)
+			AttSeq.insertLast(1);
+		SeqLen = AttSeq.length();
+	}
+	input_x = AttSeq[0];
+	//if(input_x < 0) input_x = 10;
+	
+	cleanButton();
 	float seed = rand(100);
 	seed /= 100;
-	clr();
 	person me = person(true);
 	person@ competitor = null;
-	//*
-	//print("me:" + " hp=" + self.hp + ", mp=" + self.mp + " , loss hp="+ losshp + " , KilledEnemies="+KilledEnemies +"\n");
-	//me.toScreen();
-	//print("\n");
+
 	array<person> enemies;
+	array<int> obsc;
 	for(int i=0; i<400; i++){
 		//剔除自己
 		if(loadTarget(i) != -1 ){
+			if(target.type == 2 && target.y == 0){
+				obsc.insertLast(i);
+			}
 			if(target.num != self.num ){
 				if(target.type == 0){
 					float dx = (self.facing ? self.x - target.x : target.x - self.x);
 					//敵方
+					eneID = i;
 					enemies.insertLast( person(false));
 					if( @competitor == null || (competitor.state == 14 && target.state != 14) || (competitor.absDx() > abs(dx) && target.state != 14)){
 						@competitor = enemies[enemies.length()-1];
-						break;
+						//break;
 					}
 				}
 			}	
 		}
 	}
+
+
+	if(competitor.state == 16)
+		test_doo++;
+	if(competitor.y < 0)
+		test_fly++;
+	if(competitor.state == 10)
+		test_cat++;
+	loadTarget(eneID);
+	if(competitor.blink > 5 && finish == 0){
+		clr();
+		return;
+	}
 	//結束load敵人資料
-	if(target.hp >= pre_hp+10){
+	if(target.hp >= pre_hp+30){
 		recover = 1;
 	}
-	if (target.hp<=pre_hp)	{
+	//print("target x = "+target.x+"\n");
+	//print("self x = "+self.x+"\n");
+	//print("pre hp = "+pre_hp+"\n");
+	//print("eloss hp = "+elosshp+"\n");
+	if (target.hp<=pre_hp){
 		elosshp += pre_hp-target.hp;
-		pre_hp = target.hp;
 	}
-	if(self.mp <= pre_mp-10){
-		lossmp += pre_mp-self.mp;
-		pre_mp = self.mp;
-	}
+	//pre_hp = target.hp;
 	//cleanButton();
 	//清除所有已按下的按鍵
 	fuzzyValue x_near("near",-1,0,50,90);
@@ -135,26 +190,39 @@ void id(){
 	fuzzySet y_dis("y distance");
 	y_dis.push(y_near);
 	y_dis.push(y_far);
-	//print("self = "+self.state+"\n");
-	//print("att"+countAtt+"\n");
-	if( (@competitor == null || competitor.state == 14 ||recover == 1) && start == 1 && countAtt >5){
-		//print("game over\n");
-		//print("start = "+start+"\n");
-		//print(competitor.state+"\n");
-		//right(1,1);
-		//else 
-		//exit(1);
+	if(@competitor == null){
+		return;
+	}
+	if(countloop > 800){
+		finish = 21;
+		print("0");
+		return;
+	}
+	if( (competitor.state == 14 ||(countAtt >4 && (recover == 1 ||competitor.state == 0))) && start == 1 && competitor.y == 0){
+
 		cleanButton();
-		//print("lossmp : "+lossmp+","+"Hurt : "+elosshp+"\n");
-		int Fitness = getfitness(lossmp, elosshp);
-		print(Fitness);
+		if (target.hp<=pre_hp){
+			elosshp += pre_hp-target.hp;
+		}
+		if(finish == 20){
+			elosshp = getfitness(target.hp,self.mp,self.x,target.x,countAtt);
+			print(elosshp);
+			elosshp = 0;
+			pre_hp = 500;
+			countAtt = 1;
+			finish++;
+			start = 0;
+			return;
+		}
+		recordHP = elosshp;
+		finish ++;
 		return ;
 	}
-
+	//clr();
 	float[] dx = x_dis.fuzzify(competitor.absDx());
 	float[] dy = y_dis.fuzzify(competitor.absDy());
 	float[] dz = z_dis.fuzzify(competitor.absDz());
-
+	
 	//手上有東西 馬上丟
 	if( self.weapon_type != 0 ){
 		J();
@@ -166,82 +234,240 @@ void id(){
 		return;
 	}
 	//print("target : "+target.x+","+target.type+"\n");
-	if(abs(target.x - self.x)<input_x && abs(target.z - self.z)<input_z )
+	if(  self.x >= (target.x+input_x-2) && self.x <= (target.x+input_x+2) && abs(target.z-self.z)<3 && start ==0){
 		start = 1;
+		if( target.x-self.x>0 ) {
+			right();
+			return;
+		}
+		else if(target.x-self.x<0) {
+			left();
+			return;
+		}
+	}
 	
 	//開始按方向鍵
-	if(start == 0){
+	/*if(start == 0){
 		cleanButton();
-		if(target.x - self.x > input_x  && 1 > seed){
+		if( (target.x - (self.x + input_x) > 5 || ( self.x<(target.x+input_x-5) && self.x>(target.x+5) )) && 1 > seed){
 			right(1,1);
 			return;
 		}
-		else if(self.x -target.x > input_x && 1 > seed){
-
+		else if( (self.x -(target.x+input_x) > 5|| ( target.x<(self.x+ input_x-5)&&target.x>(self.x+5))) && 1 > seed){
 			left(1,1);
 			return ;
 		}
-		if(target.z - self.z > input_z && 1 > seed){
+		if( target.z - self.z > 2 && 1 > seed){
 			down(1,1);
 			return;
 		}
-		else if(self.z - target.z > input_z && 1 > seed){
+		else if(self.z - target.z> 2 && 1 > seed){
+			up(1,1);
+			return;
+		}
+	}*/
+	if(start == 0){
+		cleanButton();
+		if( self.x < (target.x+input_x-2) && 1 > seed){
+			right(1,1);
+			return;
+		}
+		else if( self.x > (target.x+input_x+2) && 1 > seed){
+			left(1,1);
+			return ;
+		}
+		if( target.z - self.z > 2 && 1 > seed){
+			down(1,1);
+			return;
+		}
+		else if(self.z - target.z> 2 && 1 > seed){
 			up(1,1);
 			return;
 		}
 	}
 	//開始按招式
-	//cleanButton();
+	cleanButton();
+	if(start == 0) return;
 	if(countAtt >= AttSeq.length()) {
 		//print("Attack over\n");
-		int Fitness = getfitness(lossmp, elosshp);
-		print(Fitness);
-		return;
+		//clr();
+		cleanButton();
+		if (target.hp<=pre_hp){
+			elosshp += pre_hp-target.hp;
+		}
+		if(finish == 20){
+			elosshp = getfitness(target.hp,self.mp,self.x,target.x,countAtt);
+			print(elosshp);
+			elosshp = 0;
+			pre_hp = 500;
+			countAtt = 1;
+			start = 0;
+			finish++;
+			return;
+		}
+		recordHP = elosshp;
+		finish++;
+		return ;
 	}
-	if(AttSeq[countAtt] == 9){
-		countAtt++;
-		return;
-	}	
+	int _d = 0;
+	int _a = 0;
+	int _j = 0;
+	int _up = 0;
+	int _down = 0;
+	int _goj = 0;
+	int _dua = 0;
+	int _dda = 0;
+	int _dgoj = 0;
+	int _dgoa = 0;
+	int _go = 0;
+	//type assign value
+	if(self.y == 0){
+		if(me.isRunning()){
+			_j = 1;
+			_a = 1;
+			_d = 1;
+			_up = 1;
+			_go = 1;
+			_goj = 1;
+			_down = 1;//可以接招嗎?
+			_dda = 1;
+			_dua = 1;
+			_dda = 1;
+			_dgoj = 1;
+			_dgoa = 1;
+		}
+		else if(me.isRolling()){
+			_dda = 1;
+			_dgoa = 1;
+			_a = 1;
+			_go = 1;
+		}
+		else if(self.frame == 121) _a = 1;
+		else if(self.state == 15){
+			_go = 1;
+			_goj = 1;
+			//_a = 1;
+		}
+		else if(self.frame == 215){
+			_dua = 1;
+			_d = 1;
+			_dgoj = 1;
+			_goj = 1;
+			_go = 1;
+		}
+		else if(self.frame == 219){
+			_dua = 1;
+			_dgoj = 1;
+			_go = 1;
+		}
+		else if(self.frame == 111) _dua = 1;
+		else if(self.frame == 245) _dgoj = 1;
+		else if((self.frame>=286 && self.frame<=288)||(self.frame>=301 && self.frame<=303)){
+			_dgoa = 1;
+			_dua = 1;
+			_dda = 1;
+			_dgoj = 1;
+			_go = 1;
+		}
+		else if( self.frame == 74) {
+			_go = 1;
+			//_goj = 1;
+		}
+		else if(self.state == 0||self.state == 1){
+				_go = 1;
+				_d = 1;
+				_a = 1;
+				_j = 1;
+				_up = 1;
+				_down = 1;
+				_goj = 1;
+				_dua = 1;
+				_dda = 1;
+				_dgoj = 1;
+				_dgoa = 1;
+		}
+	}
+	else {
+		if(me.isDashing()) _a=1;
+		if(me.isFalling()) {
+			_a = 1;
+			_j = 1;
+		}
+		if(me.isJumping()){
+			_a = 1;
+			_go = 1;
+		}
+	}
+	int total = _a+_j+_go+_dgoj+_dua+_dda+_goj;
+	if(total == 0) return;
+	if(target.state == 16) doozitone++;
+	if(target.y<0) enflying++;
+	//print(target.hp+","+pre_hp+"\n");
+	if(behurt == 1 && target.hp < pre_hp-10){
+		behurt = 0;
+		sucatt++;
+		if(competitor.y!=0) fly_attack++;
+	}
+	behurt = 0;
+	pre_hp = target.hp;
+	cleanButton();
 	if(AttSeq[countAtt] == 1){
 		cleanButton();
 		countAtt++;
 		return;
 	}
-	if(AttSeq[countAtt] == 2){
-		UP();
+	if(AttSeq[countAtt] == 9 && _goj == 1){
+		if(target.x - self.x >0) {
+			right();
+			J();
+		}
+		if(target.x - self.x <=0) {
+			left();
+			J();
+		}
 		countAtt++;
 		return;
 	}
-	if(AttSeq[countAtt] == 3){
-		DOWM();
-		countAtt++;
-		return;
-	}
-	if(AttSeq[countAtt] == 4){//back
+	if(AttSeq[countAtt] == 2 && _go == 1){//back
 		if(target.x - self.x > 0) LEFT();
 		else RIGHT();
 		countAtt++;
 		return;
 	}
-	if(AttSeq[countAtt] == 5){//forward
+	if(AttSeq[countAtt] == 3 &&_go == 1){//forward
 		if(target.x - self.x >0) RIGHT();
 		else LEFT();
 		countAtt++;
 		return;
 	}
-	if(AttSeq[countAtt] == 6){
-		DEF();
-		countAtt++;
-		return;
-	}
-	if(AttSeq[countAtt] == 7){
+	if(AttSeq[countAtt] == 4 && _j == 1){
 		JUM();
 		countAtt++;
 		return;
 	}
-	if(AttSeq[countAtt] == 8){
+	if(AttSeq[countAtt] == 5 && _a==1){
 		ATT();
 		countAtt++;
+		behurt = 1;
+		return;
+	}
+	if(AttSeq[countAtt] == 6 && _dgoj == 1){//虎翔霸
+		countAtt++;
+		if(me.facing == 1) DrJ();
+		else DlJ();
+		behurt = 1;
+		return;
+	}
+	if(AttSeq[countAtt] == 7 && _dua == 1){
+		countAtt++;
+		DuA();
+		behurt = 1;
+		return;
+	}
+	if(AttSeq[countAtt] == 8 && _dda == 1){
+		countAtt++;
+		DdA();
+		behurt = 1;
 		return;
 	}
 }
@@ -462,190 +688,6 @@ class person{
 	bool isOnGround(){
 		if(self.y == 0) return dy==0;
 		else return dy!=0;
-	}
-};
-class oobject{
-	int id;			//物件識別碼
-	int type;		//物件類別
-	int team;		//隊伍
-	int frame;		//在第幾影格
-	int state;		//目標狀態
-	float x;		//目標位置
-	float y;
-	float z;
-	float dx;		//以自己為原點的目標位置
-	float dy;
-	float dz;
-	float vx;		//目標移動向量
-	float vy;
-	float vz;
-	
-	oobject(){
-		id = target.id;
-		type = target.type;
-		team = target.team;
-		frame = target.frame;
-		state = target.state;
-		x = target.x;
-		y = target.y;
-		z = target.z;
-		dx = target.x - self.x;
-		dy = self.y - target.y;
-		dz = self.z - target.z;
-		vx = target.x_velocity;
-		vy = target.y_velocity;
-		vz = target.z_velocity;
-	}
-	
-	float absDx(){
-		return abs(dx);
-	}
-	
-	float absDy(){
-		return abs(dy);
-	}
-	
-	float absDz(){
-		return abs(dz);
-	}
-	
-	void toScreen(){
-		print("id=" + id + ", team=" + team + ", type=" + type + "\n");
-		print("pos=(" + x + ", " + y + ", " + z + ")\n");
-		print("dpos=(" + dx + ", " + dy + ", " + dz + ")\n");
-		print("vel=(" + vx + ", " + vy + ", " + vz + ")\n");
-		print("frame=" + frame + ", state=" + state + "\n");
-	}
-	
-	bool isDrink(){
-		return type == 6;
-	}
-	
-	bool isCriminal(){
-		return type == 5;
-	}
-	
-	bool isChee(){
-		return type == 3;
-	}
-	
-	bool isWeapon(){
-		return type == 1;
-	}
-	
-	bool isHeavy(){
-		return type == 2;
-	}
-	
-	bool isBall(){
-		return type == 4;
-	}
-	
-	bool isLying(){
-		if(!isChee() && (isHeavy() ? state == 2004 : state == 1004)) return true;
-		else return false;
-	}
-	
-	bool isFalling(){
-		if(!isChee() && (isHeavy() ? state == 2000 : state == 1000)) return true;
-		else return false;
-	}
-	
-	bool isOnHand(){
-		if(isChee()) return false;
-		else if(isHeavy()){
-			if(state == 2001) return true;
-			else return false;
-		}
-		else if(state == 1001) return true;
-		else return false;
-	}
-	
-	//the same as isThrowing
-	bool isFlying(){
-		if(isChee()){
-			if(state == 3000) return true;
-			else return false;
-		}
-		else if(isHeavy()){
-			if(state == 2000) return true;
-			else return false;
-		}
-		else if(state == 1002) return true;
-		else return false;
-	}
-	
-	bool isChasing(){
-		if(isFlying()){
-			if(id == 215) return true;						//Dennis
-			else if(id == 214) return true;					//John
-			else if(id == 219 || id == 220) return true;	//Jan
-			else if(id == 221 || id == 222) return true;	//Firzen
-			else if(id == 225) return true;					//Julian
-			else if(id == 228) return true;					//Bat
-			else return false;
-		}
-		else return false;
-	}
-	
-	bool isCure(){
-		if(id == 200 && frame >= 50 && frame < 55) return true;	//John
-		else if(id == 220 && isFlying()) return true;			//Jan
-		else return false;
-	}
-	
-	bool isWall(){	//John ForceField
-		if(id == 200 && frame >= 60 && frame <= 65) return true;
-		else return false;
-	}
-	
-	bool isPassable(){
-		if(isHeavy() && isLying()) return false;			//heavy Object
-		else if(id == 212 && state == 3000) return false;	//Freeze colume
-		else return true;
-	}
-	
-	bool isPickable(){
-		if(!isChee() && isLying())return true;
-		else return false;
-	}
-	
-	bool isHitBreakable(){
-		if(!isChee()) return true;
-		else if(state == 3005 || state == 3006) return false;
-		else if(id == 211) return false;					//Fire
-		else if(isWall()) return false;						//John ForceField
-		else if(id == 212 && frame > 100) return false;		//Freeze whirlwind
-		else if(id == 229) return false;					//Julian col & exp & Bomb
-		else return true;
-	}
-	
-	bool isWind(){
-		if(state == 3006) return true;
-		else return false;
-	}
-	
-	bool isBreakable(){
-		if(id == 211) return false;							//Fire
-		else if(id == 212 && frame > 100) return false;		//Freeze whirlwind
-		else if(id == 229 && frame > 5) return false;		//Julian col & exp
-		else return true;
-	}
-	
-	bool isDefendable(){
-		if(id == 212 && frame >= 150) return false;			//Freeze whirlwind
-		else if(id == 229 && frame < 100) return false;		//Julian col & Bomb
-		else return true;
-	}
-	
-	bool isFire(){
-		if(id == 210 || id == 211 || id == 221) return true;
-		else return false;
-	}
-	
-	bool isIce(){
-		if(id == 209 || id == 212 || id == 213 || id == 222) return true;
-		else return false;
 	}
 };
 
