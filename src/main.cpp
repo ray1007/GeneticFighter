@@ -129,6 +129,9 @@ int main(int argc, char *argv[])
             }
             ga.setPopulationFitness(allFitness);
             delete[] allFitness;
+            ga.pickElite();
+            string fname = "vs_"+to_string(ga.getGeneration())+".spore";
+            ga.savefile(fname.c_str());
         }
 
         for (i = 0; i < maxGen; i++) {
