@@ -10,7 +10,7 @@ int input_z = 0;
 
 int prepos = 0;
 int stay =1;
-array<int> AttSeq = {51,5,5,7,5,5,4,2,1,9,3,6,2,6,8,3,2,1,7,4,3};
+array<int> AttSeq = {89,9,1,6,2,8,8,6,1,3,6,1,7,6,2,6,6,7,8,4,7};
 //48,2,7,7,6,1,8,5,5,8,7,4
 int finish = 0;
 int recordHP;
@@ -371,6 +371,7 @@ void id(){
 		}
 		else if( self.frame == 74) {
 			_go = 1;
+			_dgoj = 1;
 			//_goj = 1;
 		}
 		else if(self.state == 0||self.state == 1){
