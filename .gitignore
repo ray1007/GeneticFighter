@@ -1,3 +1,6 @@
 *.obj
 *.exe
+*.lnk
+*.lfr
 *.spore
+!result/*/*.spore
