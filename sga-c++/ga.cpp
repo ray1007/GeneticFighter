@@ -726,14 +726,14 @@ void GA::replacePopulation ()
         population[i] = offspring[i];
     */
     int RTRwindowSize = 300;
-    int* randArray = new int[nNextGeneration];
-    myRand.uniformArray (randArray, nNextGeneration, 0, nNextGeneration - 1);
 
     for (i = 0; i < nNextGeneration; i++){
         int minHamDist = INT_MAX;
         int nearestIdx = 0;
         //printf("%i ", i);
         int oSeqLen = offspring[i].getSeqLength();
+        int* randArray = new int[nNextGeneration];
+        myRand.uniformArray (randArray, nNextGeneration, 0, nNextGeneration - 1);
         // open a window
         // gen a rand array.
         for(j = 0; j < RTRwindowSize; j++){
@@ -751,6 +751,7 @@ void GA::replacePopulation ()
         }
         //if(nearestIdx == 0) 
         //    nearestIdx = i;
+        delete[] randArray;
         if(offspring[i].getFitness() > population[nearestIdx].getFitness())
             population[nearestIdx] = offspring[i];
     }

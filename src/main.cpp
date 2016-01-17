@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     int seqAlph = 9;    // alphabet size                           
     int selectionPressure = 2; // selection pressure
     double pc = 1;  // pc
-    double pm = 0.001;  // pm
+    double pm = 0.05;  // pm
     int maxFe = -1;
     int posLen = 1;
 
