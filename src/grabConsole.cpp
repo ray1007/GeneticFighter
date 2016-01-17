@@ -75,41 +75,57 @@ int main(int argc, char* argv[])
             srctReadRect.Left = 0; 
             srctReadRect.Bottom = 1; // bot. right: row 1, col 79 
             srctReadRect.Right = 79; 
+            
+            bool fin = false;
+            while(true){
+                success = ReadConsoleOutput(
+                    hStdOut,    // screen buffer to read from
+                    pStr,       // buffer to copy into 
+                    coordBufSize,   // col-row size of buffer 
+                    coordBufCoord,  // top left dest. cell in buffer
+                    &srctReadRect
+                );
+                if (! success) {
+                    printf("ReadConsoleOutput failed - (%d)\n", GetLastError()); 
+                    for (int i=0;i<80;++i)
+                        cout<<pStr[i].Char.AsciiChar;
+                    return 1;
+                }
 
-            success = ReadConsoleOutput(
-                hStdOut,    // screen buffer to read from
-                pStr,       // buffer to copy into 
-                coordBufSize,   // col-row size of buffer 
-                coordBufCoord,  // top left dest. cell in buffer
-                &srctReadRect
-            );
+                for (int i=0;i<80;++i){
+                    buffer[i] = pStr[i].Char.AsciiChar;
 
-            if (! success) {
-                printf("ReadConsoleOutput failed - (%d)\n", GetLastError()); 
-                for (int i=0;i<80;++i)
-                    cout<<pStr[i].Char.AsciiChar;
-                return 1;
+                    if('0' <= buffer[i] ){
+                        //cout<<":o\n";
+                        fin = true;
+                    }
+                }
+                if(fin)
+                    break;
             }
-
-            for (int i=0;i<80;++i)
-                buffer[i] = pStr[i].Char.AsciiChar;
+            //cout<<"lol\n";
 
             hFile = CreateFile(
-                       "../fitness.tmp",          // name of the write
-                       GENERIC_WRITE,          // open for writing
-                       0,                      // do not share
-                       NULL,                   // default security
-                       CREATE_ALWAYS,             // create new file only
-                       FILE_ATTRIBUTE_NORMAL,  // normal file
-                       NULL);
+                        "fitness.tmp",          // name of the write
+                        GENERIC_READ|GENERIC_WRITE,          // open for writing
+                        FILE_SHARE_READ|FILE_SHARE_DELETE,  // do share
+                        NULL,                   // default security
+                        CREATE_ALWAYS,             // create new file only
+                        FILE_ATTRIBUTE_NORMAL,  // normal file
+                        NULL);
+            if (GetLastError() != 0) 
+                cout<<"lerr"<<GetLastError()<<"\n";
             success = WriteFile( 
                     hFile,           // open file handle
                     buffer,          // start of data to write
                     80,              // number of bytes to write
                     &dwWritten, // number of bytes that were written
                     NULL);
-            if (! success) 
+            if (! success) {
+                cout<<"bad"<<GetLastError()<<"\n";
                 ExitProcess(1);
+            }
+            CloseHandle(hFile);
         }
         else{ // error handling
             cout<<"lol2\n";   
@@ -121,5 +137,5 @@ int main(int argc, char* argv[])
         cout<<GetLastError();
     }   
 
-    return 0;
+    ExitProcess(0);;
 }

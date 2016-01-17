@@ -11,20 +11,23 @@ class Chromosome
 {
     public:
         Chromosome ();
-        Chromosome (int n_alph, int n_ell);
+        Chromosome (int n_seqAlph, int n_seqLen, int n_posLen);
 
         ~Chromosome ();
 
         Chromosome& operator= (const Chromosome & c);
         //bool operator< (const Chromosome & c);
 
-        void init (int n_alph, int n_ell);
+        void init (int n_seqAlph, int n_seqLen, int n_posLen);
 
-        int getVal (int index) const;
-        void setVal (int index, int val);
+        int  getSeqVal (int index) const;
+        void setSeqVal (int index, int val);   
+        
+        int  getPosVal (int index) const;
+        void setPosVal (int index, int val);
 
-        double getFitness ();
-        void setFitness (double f);
+        double  getFitness ();
+        void    setFitness (double f);
 
         /** real evaluator */
         //double evaluate ();
@@ -35,14 +38,17 @@ class Chromosome
 
         void printf () const;
 
-        int getLength () const;
+        int getSeqLength () const;
+        int getPosLength () const;
 
-        double getMaxFitness () const;
+        //double getMaxFitness () const;
 
     protected:
-        int *gene;
-        int alph;
-        int length;
+        int *seqGene;
+        int *posGene;
+        int seqAlph;
+        int seqLength;
+        int posLength;
         double fitness;
         bool evaluated;
 };

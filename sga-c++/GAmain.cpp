@@ -6,9 +6,11 @@
  ***************************************************************************/
 
 #include <cmath>
+#include <ctime>
 #include <cstdio>
 #include <iostream>
 #include <cstdlib>
+#include <string>
 
 #include "statistics.h"
 #include "ga.h"
@@ -20,7 +22,7 @@ using namespace std;
 int main (int argc, char *argv[])
 {
     // command line arguments
-    if (argc != 9) {
+    if (argc != 9 && argc != 10) {
         printf ("GA n_alph nInitial nElite selectionPressure pc pm maxGen maxFe\n");
         return -1;
     }
@@ -33,6 +35,7 @@ int main (int argc, char *argv[])
     double pm = atof (argv[6]);  // pm
     int maxGen = atoi (argv[7]); // max generation
     int maxFe = atoi (argv[8]);  // max fe
+
     //
     //int repeat = atoi (argv[9]); // how many time to repeat
     
@@ -47,7 +50,7 @@ int main (int argc, char *argv[])
     int maxFe = atoi (argv[8]);  // max fe
     //int repeat = atoi (argv[9]); // how many time to repeat
     */
-    int i, j, k, len;
+    int i, j, k, seqLen;
 
 
     Statistics stGenS, stGenF;
@@ -56,22 +59,30 @@ int main (int argc, char *argv[])
     int failNum = 0;
 
     // variable length one-max problem.
+    int pos[2] = {50, 9};
     int MaxFitness = 15;
+    int posLen = 2;
 
-    GA ga (alph, nInitial, nElite, selectionPressure, 
+    GA ga (alph, posLen, nInitial, nElite, selectionPressure, 
            pc, pm, maxFe);
-
+    if(argc == 10)
+        ga.loadfile(argv[9]);
+    clock_t begin = clock();
     for (i = 0; i < maxGen; i++) {
         //ga.loadfile("test.spore");
         double* allFitness = new double[ga.getNChromosome()];
         
         for(j = 0; j < ga.getNChromosome(); j++){
-            int* currentGene = ga.getChromosomeGene(j, len);
+            int* currentGene = ga.getChromosomeGene(j, seqLen);
             // unit test of variable length
             // with external evaluation
-            allFitness[j] = -abs(MaxFitness - len);
-            for(k = 0; k < len; k++){
-                if(k >= MaxFitness)
+            allFitness[j] = -abs(MaxFitness - seqLen);
+            for(k = 0; k < posLen; k++){
+                allFitness[j] -= (double)abs(pos[k] - currentGene[k]) / 10;
+                //printf("pos fit %f\n", abs(pos[k] - currentGene[k])/10);
+            }
+            for(k = posLen; k < posLen + seqLen; k++){
+                if(k - posLen >= MaxFitness)
                     break;
                 if(currentGene[k] == 1)
                     allFitness[j]++;
@@ -116,10 +127,14 @@ int main (int argc, char *argv[])
         }
 
         fflush (NULL);
-        //ga.savefile("test2.spore");
+        //
         */
-        
     }
+    clock_t end = clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    printf("time elapsed:%f\n", elapsed_secs);
+    string fname = "test"+to_string(ga.getGeneration())+".spore";
+    ga.savefile(fname.c_str());
 
 
     printf ("\nAverage Gen of Success: %f\n", stGenS.getMean());

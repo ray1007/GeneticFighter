@@ -9,56 +9,86 @@
 
 Chromosome::Chromosome ()
 {
-    alph = 0;
-    length = 0;
-    gene = NULL;
+    seqAlph = 0;
+    seqLength = 0;
+    posLength = 0;
+    seqGene = NULL;
+    posGene = NULL;
     evaluated = false;
 }
 
 
-Chromosome::Chromosome (int n_alph, int n_length)
+Chromosome::Chromosome (int n_seqAlph, int n_seqLen, int n_posLen)
 {
-    gene = NULL;
-    init (n_alph, n_length);
+    seqGene = NULL;
+    posGene = NULL;
+    init (n_seqAlph, n_seqLen, n_posLen);
 }
 
 
 Chromosome::~Chromosome ()
 {
-    delete[]gene;
+    delete[]seqGene;
+    delete[]posGene;
 }
 
 
-void Chromosome::init (int n_alph, int n_length)
+void Chromosome::init (int n_seqAlph, int n_seqLen, int n_posLen)
 {
-    alph = n_alph;
-    length = n_length;
+    seqAlph = n_seqAlph;
+    //length = n_length;
+    seqLength = n_seqLen;
+    posLength = n_posLen;
 
-    if (gene != NULL)
-        delete[]gene;
+    if (seqGene != NULL)
+        delete[]seqGene;
+    if (posGene != NULL)
+        delete[]posGene;
 
-    gene = new int[length];
+    seqGene = new int[seqLength];
+    posGene = new int[posLength];
     evaluated = false;
 }
 
-int Chromosome::getVal (int index) const
+int Chromosome::getSeqVal (int index) const
 {
-    if (index < 0 || index > length){
-        ::printf("idx=%i len=%i\n", index, length);
+    if (index < 0 || index > seqLength){
+        ::printf("idx=%i len=%i\n", index, seqLength);
         outputErrMsg ("Index overrange in Chromosome::operator[] (get)");
     }
 
     //return (gene[index])? 1:0;
-    return gene[index];
+    return seqGene[index];
 }
 
 
-void Chromosome::setVal (int index, int val)
+void Chromosome::setSeqVal (int index, int val)
 {
-    if (index < 0 || index > length)
+    if (index < 0 || index > seqLength)
         outputErrMsg ("Index overrange in Chromosome::operator[] (set)");
 
-    gene[index] = val;
+    seqGene[index] = val;
+    evaluated = false;
+}
+
+int Chromosome::getPosVal (int index) const
+{
+    if (index < 0 || index > posLength){
+        ::printf("idx=%i len=%i\n", index, posLength);
+        outputErrMsg ("Index overrange in Chromosome::operator[] (get)");
+    }
+
+    //return (gene[index])? 1:0;
+    return posGene[index];
+}
+
+
+void Chromosome::setPosVal (int index, int val)
+{
+    if (index < 0 || index > posLength)
+        outputErrMsg ("Index overrange in Chromosome::operator[] (set)");
+
+    posGene[index] = val;
     evaluated = false;
 }
 
@@ -68,7 +98,7 @@ double Chromosome::getFitness ()
     if (evaluated)
         return fitness;
     else
-        return -1.0;
+        return -0.0;
         //return (fitness = evaluate ());
 }
 
@@ -110,18 +140,27 @@ Chromosome & Chromosome::operator= (const Chromosome & c)
 {
     int i;
 
-    if (length != c.length) {
-        length = c.length;
-        delete[]gene;
-        gene = new int[length];
+    if (seqLength != c.seqLength) {
+        seqLength = c.seqLength;
+        delete[]seqGene;
+        seqGene = new int[seqLength];
         //init (alph, length);
     }
+    if (posLength != c.posLength) {
+        posLength = c.posLength;
+        delete[]posGene;
+        posGene = new int[posLength];
+        //init (alph, length);
+    }
+
 
     evaluated = c.evaluated;
     fitness = c.fitness;
 
-    for (i = 0; i < length; i++)
-        gene[i] = c.gene[i];
+    for (i = 0; i < seqLength; i++)
+        seqGene[i] = c.seqGene[i];
+    for (i = 0; i < posLength; i++)
+        posGene[i] = c.posGene[i];
 
     return *this;
 }
@@ -136,19 +175,27 @@ bool Chromosome::operator< (const Chromosome & c)
 void Chromosome::printf () const
 {
     int i;
-    for (i = 0; i < length; i++)
-        ::printf ("%i", gene[i]);
+    for (i = 0; i < posLength; i++)
+        ::printf ("%i,", posGene[i]);
+    for (i = 0; i < seqLength; i++)
+        ::printf ("%i,", seqGene[i]);
 }
 
 
-int Chromosome::getLength () const
+int Chromosome::getSeqLength () const
 {
-    return length;
+    return seqLength;
 }
 
+int Chromosome::getPosLength () const
+{
+    return posLength;
+}
 
+/*
 double Chromosome::getMaxFitness () const
 {
     // For OneMax
     return ((double)length-1e-6);
 }
+*/
